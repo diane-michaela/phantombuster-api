@@ -8,6 +8,10 @@ Usage:
     # Classify an existing local CSV:
     python rank_profiles.py --input result.csv
 
+    # Append new profiles to an existing ranked_profiles.csv (skip already-ranked):
+    python rank_profiles.py --phantom-id 3489889683570426 --append
+    python rank_profiles.py --input new_batch.csv --append
+
     # Resume a batch already submitted (if script was interrupted):
     python rank_profiles.py --batch-id <batch_id>
 
@@ -122,8 +126,16 @@ Respond with ONLY this JSON, nothing else:
 
 
 def make_user_message(row: dict) -> str:
-    title    = (row.get("currentJobTitle") or "").strip()
-    headline = (row.get("headline")        or "").strip()
+    # Support both PhantomBuster column naming conventions
+    title = (
+        row.get("linkedinJobTitle") or
+        row.get("job") or
+        row.get("currentJobTitle") or ""
+    ).strip()
+    headline = (
+        row.get("linkedinHeadline") or
+        row.get("headline") or ""
+    ).strip()
     if not title and not headline:
         return "Job Title: (unknown)\nHeadline: (unknown)"
     parts = []
@@ -132,6 +144,15 @@ def make_user_message(row: dict) -> str:
     if headline and headline != title:
         parts.append(f"Headline: {headline}")
     return "\n".join(parts)
+
+
+def profile_url(row: dict) -> str:
+    """Return a stable dedup key for a profile row."""
+    return (
+        row.get("profileUrl_from_input") or
+        row.get("profileUrl") or
+        row.get("linkedinProfileUrl") or ""
+    ).strip()
 
 
 # ---------------------------------------------------------------------------
@@ -254,16 +275,46 @@ def collect_results(client: anthropic.Anthropic, batch_id: str) -> dict[str, dic
 # Output
 # ---------------------------------------------------------------------------
 
-def write_output(profiles: list[dict], results: dict[str, dict]) -> None:
+def load_existing_ranked() -> tuple[list[dict], set[str]]:
+    """Load existing ranked_profiles.csv; return (rows, set of already-ranked profile URLs)."""
+    if not OUTPUT_PATH.exists():
+        return [], set()
+    with open(OUTPUT_PATH, newline="", encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+    seen = {profile_url(r) for r in rows if profile_url(r)}
+    print(f"Existing ranked_profiles.csv: {len(rows):,} profiles already ranked.")
+    return rows, seen
+
+
+def write_output(profiles: list[dict], results: dict[str, dict], append: bool = False) -> None:
+    existing_rows: list[dict] = []
+    if append:
+        existing_rows, _ = load_existing_ranked()
+
     original_fields = list(profiles[0].keys()) if profiles else []
-    fieldnames = original_fields + ["rank", "seniority_tag"]
+    extra = [f for f in ["rank", "seniority_tag"] if f not in original_fields]
+
+    # Merge existing fieldnames if appending
+    if existing_rows:
+        all_fields = list(existing_rows[0].keys())
+        for f in original_fields + extra:
+            if f not in all_fields:
+                all_fields.append(f)
+        fieldnames = all_fields
+    else:
+        fieldnames = original_fields + extra
+
+    new_rows = []
+    for i, row in enumerate(profiles):
+        classification = results.get(str(i), {"rank": 12, "seniority": ""})
+        new_rows.append({**row, "rank": classification["rank"], "seniority_tag": classification["seniority"]})
+
+    all_rows = existing_rows + new_rows
 
     with open(OUTPUT_PATH, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
-        for i, row in enumerate(profiles):
-            classification = results.get(str(i), {"rank": 12, "seniority": ""})
-            writer.writerow({**row, "rank": classification["rank"], "seniority_tag": classification["seniority"]})
+        writer.writerows(all_rows)
 
     print(f"\nOutput written to: {OUTPUT_PATH}")
 
@@ -271,7 +322,8 @@ def write_output(profiles: list[dict], results: dict[str, dict]) -> None:
     from collections import Counter
     rank_counts = Counter(results[k]["rank"] for k in results)
     seniority_b = sum(1 for k in results if results[k]["seniority"] == "B")
-    print(f"Total profiles: {len(profiles):,}")
+    print(f"New profiles classified: {len(profiles):,}")
+    print(f"Total in ranked_profiles.csv: {len(all_rows):,}")
     print(f"Profiles with seniority B (founders/leaders): {seniority_b:,}")
     print("Rank breakdown:")
     rank_labels = {
@@ -295,6 +347,8 @@ def main():
     group.add_argument("--phantom-id", help="PhantomBuster agent ID to fetch output from")
     group.add_argument("--input", help="Path to a local CSV file")
     group.add_argument("--batch-id", help="Resume an already-submitted batch by ID")
+    parser.add_argument("--append", action="store_true",
+                        help="Append new profiles to existing ranked_profiles.csv (skip already-ranked)")
     args = parser.parse_args()
 
     if not ANTHROPIC_KEY:
@@ -331,6 +385,18 @@ def main():
 
     print(f"Loaded {len(profiles):,} profiles.")
 
+    # --- Dedup if appending ---
+    if args.append:
+        _, already_ranked = load_existing_ranked()
+        before = len(profiles)
+        profiles = [r for r in profiles if profile_url(r) not in already_ranked]
+        skipped = before - len(profiles)
+        if skipped:
+            print(f"Skipping {skipped:,} already-ranked profiles → {len(profiles):,} new to classify.")
+        if not profiles:
+            print("Nothing new to classify. ranked_profiles.csv is up to date.")
+            return
+
     # --- Estimate cost ---
     n = len(profiles)
     est_input_tokens  = n * 120   # ~120 tokens per request (system cached after first)
@@ -348,7 +414,7 @@ def main():
     results = collect_results(client, batch_id)
 
     # --- Write output ---
-    write_output(profiles, results)
+    write_output(profiles, results, append=args.append)
 
 
 if __name__ == "__main__":
