@@ -28,6 +28,28 @@ print(pb.list_phantoms())
 | `get_phantom_status(agent_id)` | Return current launch status + last end message |
 | `delete_phantom_output(agent_id)` | Delete all stored output for an agent |
 
+## Profile ranking (run after PhantomBuster finishes)
+
+```bash
+# Fetch PhantomBuster output + classify all profiles in one go:
+source ~/phantombuster-api/.env && \
+  ~/phantombuster-api/.venv/bin/python rank_profiles.py --phantom-id 3489889683570426
+
+# Or classify a local CSV you already have:
+source ~/phantombuster-api/.env && \
+  ~/phantombuster-api/.venv/bin/python rank_profiles.py --input pb_result.csv
+
+# If the script was interrupted, resume with the saved batch ID:
+source ~/phantombuster-api/.env && \
+  ~/phantombuster-api/.venv/bin/python rank_profiles.py --batch-id <batch_id>
+```
+
+Output: `ranked_profiles.csv` — all original columns + `rank` (1–13) + `seniority_tag` (B or empty)
+
+Requires `ANTHROPIC_API_KEY` in `.env` in addition to `PHANTOMBUSTER_API_KEY`.
+
+---
+
 ## API base
 `https://api.phantombuster.com/api/v2`
 Auth header: `X-Phantombuster-Key: <key>`
