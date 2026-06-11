@@ -177,7 +177,6 @@ def fetch_phantom_output(phantom_id: str) -> list[dict]:
     csv_url = None
     for line in output_text.splitlines():
         if "result.csv" in line and "s3.amazonaws.com" in line:
-            # e.g. "CSV saved at https://phantombuster.s3.amazonaws.com/…/result.csv"
             for token in line.split():
                 if token.startswith("https://") and token.endswith(".csv"):
                     csv_url = token
@@ -185,8 +184,22 @@ def fetch_phantom_output(phantom_id: str) -> list[dict]:
         if csv_url:
             break
 
+    # Fall back: construct direct S3 URL from phantom metadata
     if not csv_url:
-        sys.exit("Could not find result.csv URL in PhantomBuster output. Is the phantom finished?")
+        agent_r = httpx.get(
+            f"{PHANTOM_BASE}/agents/fetch",
+            headers=headers,
+            params={"id": phantom_id},
+        )
+        agent_r.raise_for_status()
+        agent = agent_r.json()
+        org_folder = agent.get("orgS3Folder")
+        s3_folder = agent.get("s3Folder")
+        if org_folder and s3_folder:
+            csv_url = f"https://phantombuster.s3.amazonaws.com/{org_folder}/{s3_folder}/result.csv"
+            print(f"Using direct S3 URL: {csv_url}")
+        else:
+            sys.exit("Could not find result.csv URL in PhantomBuster output. Is the phantom finished?")
 
     print(f"Downloading CSV from PhantomBuster…")
     resp = httpx.get(csv_url, follow_redirects=True)
@@ -248,6 +261,31 @@ def wait_for_batch(client: anthropic.Anthropic, batch_id: str) -> None:
     print("Batch complete.")
 
 
+def parse_classification(raw: str) -> dict:
+    """Extract rank/seniority from raw text, tolerating markdown fences."""
+    import re
+    text = raw.strip()
+    # Strip markdown code fences if present
+    text = re.sub(r"^```[a-z]*\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    text = text.strip()
+    # Extract first {...} block if surrounded by prose
+    m = re.search(r"\{[^}]+\}", text)
+    if m:
+        text = m.group(0)
+    try:
+        parsed = json.loads(text)
+        rank = int(parsed.get("rank", 12))
+        seniority = str(parsed.get("seniority", "")).strip()
+        if rank < 1 or rank > 13:
+            rank = 12
+        if seniority not in ("B", ""):
+            seniority = ""
+        return {"rank": rank, "seniority": seniority}
+    except (json.JSONDecodeError, ValueError):
+        return {"rank": 12, "seniority": ""}
+
+
 def collect_results(client: anthropic.Anthropic, batch_id: str) -> dict[str, dict]:
     """Return mapping custom_id → {"rank": int, "seniority": str}."""
     results = {}
@@ -255,17 +293,7 @@ def collect_results(client: anthropic.Anthropic, batch_id: str) -> dict[str, dic
         if result.result.type == "succeeded":
             msg = result.result.message
             raw = next((b.text for b in msg.content if b.type == "text"), "")
-            try:
-                parsed = json.loads(raw.strip())
-                rank = int(parsed.get("rank", 12))
-                seniority = str(parsed.get("seniority", "")).strip()
-                if rank < 1 or rank > 13:
-                    rank = 12
-                if seniority not in ("B", ""):
-                    seniority = ""
-                results[result.custom_id] = {"rank": rank, "seniority": seniority}
-            except (json.JSONDecodeError, ValueError):
-                results[result.custom_id] = {"rank": 12, "seniority": ""}
+            results[result.custom_id] = parse_classification(raw)
         else:
             results[result.custom_id] = {"rank": 12, "seniority": ""}
     return results
