@@ -1,6 +1,32 @@
 # PhantomBuster API + LinkedIn Profile Ranker
 
-A Python toolkit that connects PhantomBuster to Claude (Anthropic) so you can control your LinkedIn automation agents in plain English and classify scraped profiles by role and seniority — all from your terminal.
+A Python toolkit that connects PhantomBuster to Claude (Anthropic) to control LinkedIn automation agents in plain English and classify scraped profiles by role and seniority — all from your terminal.
+
+---
+
+## Sourcing pipeline
+
+```
+LinkedIn Company Employees Export (PB, daily 04:45)
+  ↓
+filter_and_prepare_enricher.py  ← keeps FR/ES/PT only (~45% of profiles)
+  ↓
+Gem (gem.com) — bulk CSV import of LinkedIn URLs → personal emails
+  ↓
+LinkedIn Profile Scraper (PB, 200/day)  ← enriches filtered profiles
+  ↓
+rank_profiles.py  ← Claude Haiku Batch API, role rank 1–13
+  ↓
+ranked_profiles.csv
+```
+
+**Wave status:**
+
+| Wave | Companies | Status |
+|---|---|---|
+| Wave 1 (`target_companies_wave1.csv`) | 28 — sales automation FR/ES/PT | Done — 179 ranked profiles |
+| Wave 2 (`target_companies_wave2.csv`) | 45 — broader B2B SaaS | Finishing Jun 16, enrichment next |
+| Wave 3 (`target_companies_wave3.csv`) | 30 — Bordeaux tech + AI | Prepared — not started yet |
 
 ---
 
@@ -129,12 +155,16 @@ Output: `ranked_profiles.csv` — all original columns plus:
 
 ```
 phantombuster-api/
-├── phantombuster_api.py   # PhantomBuster API v2 wrapper (8 functions)
-├── rank_profiles.py       # LinkedIn profile classifier (Claude Batch API)
-├── requirements.txt       # httpx, anthropic
-├── CLAUDE.md              # Instructions for Claude Code
-├── .env                   # API keys — NOT committed
-└── .gitignore             # Excludes .env, .venv, __pycache__
+├── phantombuster_api.py              # PhantomBuster API wrapper (8 functions)
+├── rank_profiles.py                  # LinkedIn profile classifier (Claude Batch API)
+├── filter_and_prepare_enricher.py    # Filter FR/ES/PT → prep enricher input
+├── target_companies_wave1.csv        # Wave 1 companies (28, done)
+├── target_companies_wave2.csv        # Wave 2 companies (45, in progress)
+├── target_companies_wave3.csv        # Wave 3 companies (30, prepared)
+├── requirements.txt                  # httpx, anthropic
+├── CLAUDE.md                         # Instructions for Claude Code
+├── .env                              # API keys — NOT committed
+└── .gitignore                        # Excludes .env, .venv, __pycache__
 ```
 
 ---
@@ -151,3 +181,12 @@ phantombuster-api/
 
 - `httpx` — HTTP client for PhantomBuster API calls
 - `anthropic` — Claude SDK for profile classification
+
+---
+
+## API notes
+
+Most PhantomBuster endpoints are on **v1**: `https://api.phantombuster.com/api/v1`
+The launch endpoint is the exception: `POST https://api.phantombuster.com/api/v2/agents/launch`
+
+Auth header on all calls: `X-Phantombuster-Key: <key>`
