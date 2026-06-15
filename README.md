@@ -11,13 +11,13 @@ LinkedIn Company Employees Export (PB, daily 04:45)
   ↓
 filter_and_prepare_enricher.py  ← keeps FR/ES/PT only (~45% of profiles)
   ↓
-Gem (gem.com) — bulk CSV import of LinkedIn URLs → personal emails
-  ↓
 LinkedIn Profile Scraper (PB, 200/day)  ← enriches filtered profiles
   ↓
 rank_profiles.py  ← Claude Haiku Batch API, role rank 1–13
   ↓
-ranked_profiles.csv
+ranked_profiles.csv  ← review & shortlist
+  ↓
+Gem (gem.com) — bulk CSV import of LinkedIn URLs → personal emails
 ```
 
 **Wave status:**

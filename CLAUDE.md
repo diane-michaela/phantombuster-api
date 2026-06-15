@@ -82,17 +82,17 @@ Both contain the same key — never hard-code it.
    → keeps only France / Spain / Portugal profiles (~45% of total)
    → saves wave2_enricher_input.csv → upload to Google Sheets manually
 
-3. Gem (gem.com) — personal email enrichment
-   → bulk CSV import with LinkedIn profile URLs
-   → NOT a PhantomBuster phantom
-
-4. LinkedIn Profile Scraper (PB) — profile enrichment
+3. LinkedIn Profile Scraper (PB) — profile enrichment
    → phantom ID: 5440919304796371
    → pointed at filtered Google Sheet, 200 profiles/day
 
-5. rank_profiles.py — Claude Haiku Batch API
+4. rank_profiles.py — Claude Haiku Batch API
    → classifies each profile: role rank 1–13 + seniority tag B
-   → output: ranked_profiles.csv
+   → output: ranked_profiles.csv → review & shortlist
+
+5. Gem (gem.com) — personal email enrichment
+   → bulk CSV import of shortlisted LinkedIn profile URLs only
+   → NOT a PhantomBuster phantom — run on final candidates, not all profiles
 ```
 
 ## Wave status (June 2026)
