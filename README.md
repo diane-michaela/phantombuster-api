@@ -8,13 +8,13 @@ A Python toolkit that connects PhantomBuster to Claude (Anthropic) to control Li
 
 ```
 1. LinkedIn Company Employees Export (PB, daily 04:45)
-   → phantom ID: 824349506789425
+   → phantomBuster
 
 2. filter_and_prepare_enricher.py
    → keeps FR / ES / PT profiles only (~45% of total)
 
 3. LinkedIn Profile Scraper (PB, 200/day)
-   → phantom ID: 5440919304796371
+   → phantomBuster
    → enriches filtered profiles (title, skills, headline…)
 
 4. rank_profiles.py  ← Claude Haiku Batch API, role rank 1–13
@@ -22,9 +22,9 @@ A Python toolkit that connects PhantomBuster to Claude (Anthropic) to control Li
 
 5. push_to_airtable.py
    → pushes ranked CSV into Airtable, adds country + role label
-   → usage: python push_to_airtable.py --input ranked_profiles.csv --wave 2
+   → usage: python push_to_airtable.py 
 
-6. Gem (gem.com) — shortlisted candidates only
+6. TBC: Gem (gem.com) — shortlisted candidates only
    → bulk CSV import of LinkedIn URLs → personal emails
 ```
 
