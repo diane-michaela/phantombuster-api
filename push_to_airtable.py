@@ -61,35 +61,49 @@ ROLE_LABELS = {
     "13": "Investor / VC / Advisor",
 }
 
-METRO_HINTS = {
-    "coimbra metropolitan area": "PT",
-    "greater barcelona metropolitan area": "SP",
-    "greater alicante area": "SP",
-    "greater almería metropolitan area": "SP",
-    "greater angers area": "FR",
-    "greater nantes metropolitan area": "FR",
-    "greater paris metropolitan area": "FR",
-    "greater lyon area": "FR",
-    "greater bordeaux metropolitan area": "FR",
-    "greater madrid metropolitan area": "SP",
-    "greater seville metropolitan area": "SP",
-    "greater valencia metropolitan area": "SP",
-    "greater porto metropolitan area": "PT",
-    "greater lisbon metropolitan area": "PT",
-    "lisbon metropolitan area": "PT",
-    "porto metropolitan area": "PT",
+# Cities/regions whose name alone implies a country (used for "Greater X" patterns)
+CITY_COUNTRY = {
+    # France
+    "paris": "FR", "nantes": "FR", "bordeaux": "FR", "lyon": "FR",
+    "marseille": "FR", "toulouse": "FR", "montpellier": "FR", "rennes": "FR",
+    "grenoble": "FR", "metz": "FR", "lille": "FR", "nice": "FR",
+    "poitiers": "FR", "saint-nazaire": "FR", "lorient": "FR", "mulhouse": "FR",
+    "angers": "FR", "strasbourg": "FR", "nancy": "FR", "tours": "FR",
+    "rouen": "FR", "reims": "FR", "dijon": "FR", "brest": "FR",
+    "le havre": "FR", "clermont-ferrand": "FR", "amiens": "FR", "limoges": "FR",
+    # Spain
+    "barcelona": "SP", "madrid": "SP", "valencia": "SP", "seville": "SP",
+    "sevilla": "SP", "bilbao": "SP", "murcia": "SP", "zaragoza": "SP",
+    "málaga": "SP", "malaga": "SP", "alicante": "SP", "córdoba": "SP",
+    "cordoba": "SP", "terrassa": "SP", "tarragona": "SP", "pamplona": "SP",
+    "valladolid": "SP", "san sebastián": "SP", "san sebastian": "SP",
+    "santiago de compostela": "SP", "donostia": "SP",
+    # Portugal
+    "lisbon": "PT", "porto": "PT", "braga": "PT", "coimbra": "PT",
+    "faro": "PT", "funchal": "PT", "aveiro": "PT", "setúbal": "PT",
+    "setubal": "PT", "viseu": "PT", "leiria": "PT", "évora": "PT",
 }
-COUNTRY_LAST = {"france": "FR", "spain": "SP", "portugal": "PT"}
 
 def detect_country(location: str) -> str:
     if not location:
         return ""
     lower = location.strip().lower()
-    for hint, code in METRO_HINTS.items():
-        if hint in lower:
-            return code
+    # Country name anywhere in string (handles "Greater Córdoba, Spain Area" etc.)
+    if "france" in lower:
+        return "FR"
+    if "spain" in lower:
+        return "SP"
+    if "portugal" in lower:
+        return "PT"
+    # Last segment after final comma ("Barcelona, Catalonia, Spain")
     last = lower.rsplit(",", 1)[-1].strip()
-    return COUNTRY_LAST.get(last, "")
+    if last in ("france", "spain", "portugal"):
+        return {"france": "FR", "spain": "SP", "portugal": "PT"}[last]
+    # City/region name lookup for "Greater X Metropolitan Area/Region" patterns
+    for city, code in CITY_COUNTRY.items():
+        if city in lower:
+            return code
+    return ""
 
 
 def get_existing_fields() -> set:
