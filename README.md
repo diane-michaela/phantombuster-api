@@ -7,7 +7,7 @@ A Python toolkit that connects PhantomBuster to Claude (Anthropic) to control Li
 ## Sourcing pipeline
 
 ```
-LinkedIn Company Employees Export (PB, daily 04:45)
+LinkedIn Company Employees Export (PB, daily)
   ↓
 filter_and_prepare_enricher.py  ← keeps FR/ES/PT only (~45% of profiles)
   ↓
@@ -17,7 +17,9 @@ rank_profiles.py  ← Claude Haiku Batch API, role rank 1–13
   ↓
 ranked_profiles.csv  ← review & shortlist
   ↓
-Gem (gem.com) — bulk CSV import of LinkedIn URLs → personal emails
+(TBC) Gem (gem.com) — bulk CSV import of LinkedIn URLs → personal emails
+  ↓
+Airtable 
 ```
 
 **Wave status:**
