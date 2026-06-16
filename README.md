@@ -7,28 +7,34 @@ A Python toolkit that connects PhantomBuster to Claude (Anthropic) to control Li
 ## Sourcing pipeline
 
 ```
-LinkedIn Company Employees Export (PB, daily)
-  ↓
-filter_and_prepare_enricher.py  ← keeps FR/ES/PT only (~45% of profiles)
-  ↓
-LinkedIn Profile Scraper (PB, 200/day)  ← enriches filtered profiles
-  ↓
-rank_profiles.py  ← Claude Haiku Batch API, role rank 1–13
-  ↓
-ranked_profiles.csv  ← review & shortlist
-  ↓
-(TBC) Gem (gem.com) — bulk CSV import of LinkedIn URLs → personal emails
-  ↓
-Airtable 
+1. LinkedIn Company Employees Export (PB, daily 04:45)
+   → phantom ID: 824349506789425
+
+2. filter_and_prepare_enricher.py
+   → keeps FR / ES / PT profiles only (~45% of total)
+
+3. LinkedIn Profile Scraper (PB, 200/day)
+   → phantom ID: 5440919304796371
+   → enriches filtered profiles (title, skills, headline…)
+
+4. rank_profiles.py  ← Claude Haiku Batch API, role rank 1–13
+   → output: ranked_profiles.csv
+
+5. push_to_airtable.py
+   → pushes ranked CSV into Airtable, adds country + role label
+   → usage: python push_to_airtable.py --input ranked_profiles.csv --wave 2
+
+6. Gem (gem.com) — shortlisted candidates only
+   → bulk CSV import of LinkedIn URLs → personal emails
 ```
 
-**Wave status:**
+**Wave status (Jun 2026):**
 
-| Wave | Companies | Status |
-|---|---|---|
-| Wave 1 (`target_companies_wave1.csv`) | 28 — sales automation FR/ES/PT | Done — 179 ranked profiles |
-| Wave 2 (`target_companies_wave2.csv`) | 45 — broader B2B SaaS | Finishing Jun 16, enrichment next |
-| Wave 3 (`target_companies_wave3.csv`) | 30 — Bordeaux tech + AI | Prepared — not started yet |
+| Wave | Companies | Profiles | Status |
+|---|---|---|---|
+| Wave 1 (`target_companies_wave1.csv`) | 28 — sales automation FR/ES/PT | 2,187 ranked | Done — in Airtable |
+| Wave 2 (`target_companies_wave2.csv`) | 45 — broader B2B SaaS | 18,700 exported, 9,084 FR/ES/PT | Enricher running (~200/day, done ~Jul 31) |
+| Wave 3 (`target_companies_wave3.csv`) | 29 — Bordeaux tech + AI | — | Export started Jun 16 |
 
 ---
 
@@ -160,9 +166,10 @@ phantombuster-api/
 ├── phantombuster_api.py              # PhantomBuster API wrapper (8 functions)
 ├── rank_profiles.py                  # LinkedIn profile classifier (Claude Batch API)
 ├── filter_and_prepare_enricher.py    # Filter FR/ES/PT → prep enricher input
+├── push_to_airtable.py               # Push ranked CSV → Airtable (auto-creates fields, detects country)
 ├── target_companies_wave1.csv        # Wave 1 companies (28, done)
-├── target_companies_wave2.csv        # Wave 2 companies (45, in progress)
-├── target_companies_wave3.csv        # Wave 3 companies (30, prepared)
+├── target_companies_wave2.csv        # Wave 2 companies (45, enricher running)
+├── target_companies_wave3.csv        # Wave 3 companies (29, export started Jun 16)
 ├── requirements.txt                  # httpx, anthropic
 ├── CLAUDE.md                         # Instructions for Claude Code
 ├── .env                              # API keys — NOT committed

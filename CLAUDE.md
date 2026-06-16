@@ -90,18 +90,24 @@ Both contain the same key — never hard-code it.
    → classifies each profile: role rank 1–13 + seniority tag B
    → output: ranked_profiles.csv → review & shortlist
 
-5. Gem (gem.com) — personal email enrichment
+5. push_to_airtable.py — push ranked CSV into Airtable
+   → auto-creates missing fields, detects country (FR/SP/PT), adds wave label
+   → python push_to_airtable.py --input ranked_profiles.csv --wave 2
+   → Airtable base: app5BF5NrOgR0kZIB / table: tbl01XKJ9ZQuADIcn
+   → requires AIRTABLE_PAT in .env
+
+6. Gem (gem.com) — personal email enrichment
    → bulk CSV import of shortlisted LinkedIn profile URLs only
    → NOT a PhantomBuster phantom — run on final candidates, not all profiles
 ```
 
 ## Wave status (June 2026)
 
-| Wave | Companies | Status |
-|---|---|---|
-| Wave 1 | 28 companies (sales automation, FR/ES/PT) | Done — ranked, 179 profiles |
-| Wave 2 | 45 companies (broader B2B SaaS) | Finishing Jun 16 at 04:45 — enrichment pending |
-| Wave 3 | 30 companies (Bordeaux tech + AI) | Prepared — do NOT run yet |
+| Wave | Companies | Profiles | Status |
+|---|---|---|---|
+| Wave 1 | 28 (sales automation, FR/ES/PT) | 2,187 ranked | Done — in Airtable |
+| Wave 2 | 45 (broader B2B SaaS) | 18,700 exported, 9,084 FR/ES/PT | Enricher running, done ~Jul 31 2026 |
+| Wave 3 | 29 (Bordeaux tech + AI) | — | Employees Export started Jun 16 |
 
 ## ⚠️ DO NOT RUN
 **LinkedIn Auto Connect** — uses connection quota and was crash-looping (3-second runs).
