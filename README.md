@@ -83,7 +83,11 @@ After a PhantomBuster LinkedIn scrape completes, this script:
 | 12 | Other / HR / Finance / Unknown |
 | 13 | Investor / VC / Advisor |
 
-**Seniority tag B** = Founder, C-suite, VP, Director, Head of, Engineering Manager, and equivalents.
+**Seniority tag `B`** = leadership / decision-maker scope. Assigned by Claude Haiku based on job title.
+
+Includes: Founder, Co-founder, CEO, CTO, COO, CFO, CPO, CMO, CRO, President, Chairman, VP, Vice-President, Director, Head of, Managing Director, General Partner, Managing Partner, Engineering Manager, Tech Lead, Lead Engineer, Chief of Staff, Operating Partner, QA Manager.
+
+Empty = individual contributor (Senior X, Staff X, Principal X without management scope, intern, associate, etc.).
 
 ---
 
