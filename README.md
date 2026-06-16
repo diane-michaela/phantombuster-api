@@ -76,10 +76,10 @@ After a PhantomBuster LinkedIn scrape completes, this script:
 | 5 | Other Engineering (QA, Security, Embedded…) |
 | 6 | Product |
 | 7 | Design |
-| 8 | Marketing |
+| 8 | Marketing / Growth |
 | 9 | Revenue / BizDev / Partnerships |
 | 10 | Sales / AE / BDR / SDR |
-| 11 | Customer Success |
+| 11 | Customer Success / Enablement |
 | 12 | Other / HR / Finance / Unknown |
 | 13 | Investor / VC / Advisor |
 
