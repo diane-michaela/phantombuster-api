@@ -165,7 +165,7 @@ Output: `ranked_profiles.csv` — all original columns plus:
 
 ## Auto Connect filter logic
 
-Run after ranking is done for each wave. Produces a CSV ready to feed into the LinkedIn Auto Connect phantom.
+Run once all waves are ranked (~Oct 2026). Produces a CSV ready to feed into the LinkedIn Auto Connect phantom.
 
 ```bash
 python build_autoconnect_segment.py --input ranked_profiles.csv --wave 2
@@ -174,7 +174,8 @@ python build_autoconnect_segment.py --input ranked_profiles.csv --wave 2
 **Filters applied:**
 - Country: **France only**
 - Connection degree: **2nd only** (1st = already connected, 3rd = can't reach directly)
-- Ranks included:
+- Excludes profiles where `autoconnect_sent = true` in Airtable — no one is contacted twice
+- Ranks:
 
 | Rank | Role | Included |
 |---|---|---|
@@ -192,8 +193,13 @@ python build_autoconnect_segment.py --input ranked_profiles.csv --wave 2
 | 12 | Other / HR / Finance / Unknown | ❌ |
 | 13 | Investor / VC / Advisor | ❌ |
 
-Output is sorted: seniority B first, then rank ascending.
-LinkedIn limit: ~20 connections/day.
+Output sorted: seniority B first, then rank ascending. LinkedIn limit: ~20 connections/day.
+
+**After running the phantom:** bulk-check `autoconnect_sent` in Airtable for the segment profiles. Next run excludes them automatically.
+
+**Timing:** do not run while Profile Scraper (enricher) is active — both visit individual profiles and LinkedIn flags the overlap. Wait until the current wave's enricher finishes before starting Auto Connect.
+
+**Why Auto Connect compounds results:** accepted connections become 1st degree → their colleagues at the same company become 2nd degree → next Employees Export run on those companies surfaces profiles previously hidden at 3rd degree.
 
 ---
 
@@ -204,8 +210,8 @@ phantombuster-api/
 ├── phantombuster_api.py              # PhantomBuster API wrapper (8 functions)
 ├── rank_profiles.py                  # LinkedIn profile classifier (Claude Batch API)
 ├── filter_and_prepare_enricher.py    # Filter FR/ES/PT → prep enricher input
-├── push_to_airtable.py               # Push ranked CSV → Airtable (auto-creates fields, detects country)
-├── build_autoconnect_segment.py      # Build Auto Connect CSV (FR, 2nd degree, target ranks)
+├── push_to_airtable.py               # Push ranked CSV → Airtable (country, connectionDegree, autoconnect_sent)
+├── build_autoconnect_segment.py      # Build Auto Connect CSV (FR, 2nd degree, target ranks, dedup via Airtable)
 ├── target_companies_wave1.csv        # Wave 1 companies (28, done)
 ├── target_companies_wave2.csv        # Wave 2 companies (45, enricher running)
 ├── target_companies_wave3.csv        # Wave 3 companies (29, export started Jun 16)
