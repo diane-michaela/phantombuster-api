@@ -3,20 +3,27 @@ build_autoconnect_segment.py  —  build an Auto Connect CSV from a ranked profi
 
 Usage:
     python build_autoconnect_segment.py --input ranked_profiles.csv --wave 2
+    python build_autoconnect_segment.py --input ranked_profiles.csv --wave all  # merge multiple CSVs
 
 Filters:
   - Country: France only (detected from location field)
   - Connection degree: 2nd only (1st = already connected, 3rd = can't reach)
   - Ranks included: 1–8, 11 (all), 9 (GTM Engineer / Growth Engineer only)
   - Excluded: rank 10 (Sales), 12 (Other/HR), 13 (VC/Investor), rank 9 BizDev/Partnerships
+  - Excluded: profiles where autoconnect_sent = True in Airtable (already contacted)
 
 Output:
   - autoconnect_segment_wave{N}.csv — sorted by seniority B first, then rank ascending
   - Column: profileUrl (ready to feed into LinkedIn Auto Connect phantom)
-  - Also includes name, linkedinJobTitle, rank, seniority_tag for reference
+  - Also includes name, linkedinJobTitle, rank, seniority_tag, connectionDegree for reference
+
+After running the Auto Connect phantom, mark sent profiles in Airtable:
+  - Check the autoconnect_sent box for all profiles in the segment
+  - Future runs of this script will exclude them automatically
 """
 
-import argparse, csv, os, sys
+import argparse, csv, os, sys, time
+import requests
 
 # ── Country detection (FR only) ──────────────────────────────────────────────
 CITY_COUNTRY = {
@@ -68,6 +75,41 @@ def include_profile(rank_str: str, title: str) -> bool:
     return False
 
 
+# ── Airtable: fetch already-sent profiles ────────────────────────────────────
+PAT   = os.environ.get("AIRTABLE_PAT", "")
+BASE  = "app5BF5NrOgR0kZIB"
+TABLE = "tbl01XKJ9ZQuADIcn"
+
+def get_already_sent() -> set:
+    """Return set of LinkedIn URLs where autoconnect_sent = true in Airtable."""
+    if not PAT:
+        print("  (AIRTABLE_PAT not set — skipping already-sent filter)")
+        return set()
+    headers = {"Authorization": f"Bearer {PAT}"}
+    sent = set()
+    offset = None
+    while True:
+        params = {
+            "fields[]": ["linkedinProfileUrl", "autoconnect_sent"],
+            "filterByFormula": "autoconnect_sent = TRUE()",
+            "pageSize": 100,
+        }
+        if offset:
+            params["offset"] = offset
+        r = requests.get(f"https://api.airtable.com/v0/{BASE}/{TABLE}", headers=headers, params=params)
+        r.raise_for_status()
+        data = r.json()
+        for rec in data["records"]:
+            url = rec.get("fields", {}).get("linkedinProfileUrl", "").strip()
+            if url:
+                sent.add(url)
+        offset = data.get("offset")
+        if not offset:
+            break
+        time.sleep(0.2)
+    return sent
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser()
@@ -81,13 +123,21 @@ def main():
     with open(args.input, encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
+    print("Fetching already-sent profiles from Airtable…")
+    already_sent = get_already_sent()
+    print(f"  {len(already_sent)} profiles already contacted — will exclude")
+
     kept = []
-    stats = {"not_fr": 0, "not_2nd": 0, "rank_excluded": 0, "no_url": 0}
+    stats = {"not_fr": 0, "not_2nd": 0, "rank_excluded": 0, "no_url": 0, "already_sent": 0}
 
     for row in rows:
         url = row.get("linkedinProfileUrl", "").strip()
         if not url:
             stats["no_url"] += 1
+            continue
+
+        if url in already_sent:
+            stats["already_sent"] += 1
             continue
 
         if not is_france(row.get("location", "")):
@@ -106,12 +156,13 @@ def main():
             continue
 
         kept.append({
-            "profileUrl":    url,
-            "name":          row.get("name", "").strip(),
+            "profileUrl":       url,
+            "name":             row.get("name", "").strip(),
             "linkedinJobTitle": title,
-            "rank":          rank_str,
-            "seniority_tag": row.get("seniority_tag", "").strip(),
-            "location":      row.get("location", "").strip(),
+            "rank":             rank_str,
+            "seniority_tag":    row.get("seniority_tag", "").strip(),
+            "connectionDegree": row.get("connectionDegree", "").strip(),
+            "location":         row.get("location", "").strip(),
         })
 
     # Sort: seniority B first, then rank ascending
@@ -124,12 +175,13 @@ def main():
     out_path = f"autoconnect_segment{wave_suffix}.csv"
 
     with open(out_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["profileUrl", "name", "linkedinJobTitle", "rank", "seniority_tag", "location"])
+        writer = csv.DictWriter(f, fieldnames=["profileUrl", "name", "linkedinJobTitle", "rank", "seniority_tag", "connectionDegree", "location"])
         writer.writeheader()
         writer.writerows(kept)
 
     print(f"\nResults for {args.input}:")
     print(f"  Total input:       {len(rows)}")
+    print(f"  Already contacted: {stats['already_sent']}")
     print(f"  Not France:        {stats['not_fr']}")
     print(f"  Not 2nd degree:    {stats['not_2nd']}")
     print(f"  Rank excluded:     {stats['rank_excluded']}")

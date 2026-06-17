@@ -42,7 +42,8 @@ SKIP_FIELDS = {
     "companyName", "linkedinCompanyUrl", "salesNavigatorCompanyUrl",
     "companyWebsite", "linkedinJobDateRange", "companyIndustry",
     "linkedinSchoolDateRange", "linkedinPreviousSchoolDateRange",
-    "linkedinCompanySlug", "connectionDegree", "createdBy", "updatedBy",
+    "linkedinCompanySlug", "createdBy", "updatedBy",
+    # connectionDegree is handled separately below (pushed as singleLineText)
 }
 
 ROLE_LABELS = {
@@ -164,6 +165,8 @@ def main():
         "wave": "singleLineText",
         "professionalEmail": "email",
         "linkedinConnectionsCount": "number",
+        "connectionDegree": "singleLineText",
+        "autoconnect_sent": "checkbox",
     }
     for fname, ftype in needed.items():
         if fname not in existing:
