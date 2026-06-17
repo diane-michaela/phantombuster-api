@@ -163,6 +163,40 @@ Output: `ranked_profiles.csv` — all original columns plus:
 
 ---
 
+## Auto Connect filter logic
+
+Run after ranking is done for each wave. Produces a CSV ready to feed into the LinkedIn Auto Connect phantom.
+
+```bash
+python build_autoconnect_segment.py --input ranked_profiles.csv --wave 2
+```
+
+**Filters applied:**
+- Country: **France only**
+- Connection degree: **2nd only** (1st = already connected, 3rd = can't reach directly)
+- Ranks included:
+
+| Rank | Role | Included |
+|---|---|---|
+| 1 | AI / ML / Data / LLM | ✅ all |
+| 2 | Frontend / Mobile / Fullstack | ✅ all |
+| 3 | Backend | ✅ all |
+| 4 | DevOps / SRE / Cloud | ✅ all |
+| 5 | Other Engineering | ✅ all |
+| 6 | Product | ✅ all |
+| 7 | Design | ✅ all |
+| 8 | Marketing / Growth | ✅ all |
+| 9 | Revenue / BizDev / GTM | ✅ only if title contains "GTM" or "Growth Engineer" |
+| 10 | Sales / AE / BDR / SDR | ❌ |
+| 11 | Customer Success / Enablement | ✅ all |
+| 12 | Other / HR / Finance / Unknown | ❌ |
+| 13 | Investor / VC / Advisor | ❌ |
+
+Output is sorted: seniority B first, then rank ascending.
+LinkedIn limit: ~20 connections/day.
+
+---
+
 ## Project structure
 
 ```
@@ -171,6 +205,7 @@ phantombuster-api/
 ├── rank_profiles.py                  # LinkedIn profile classifier (Claude Batch API)
 ├── filter_and_prepare_enricher.py    # Filter FR/ES/PT → prep enricher input
 ├── push_to_airtable.py               # Push ranked CSV → Airtable (auto-creates fields, detects country)
+├── build_autoconnect_segment.py      # Build Auto Connect CSV (FR, 2nd degree, target ranks)
 ├── target_companies_wave1.csv        # Wave 1 companies (28, done)
 ├── target_companies_wave2.csv        # Wave 2 companies (45, enricher running)
 ├── target_companies_wave3.csv        # Wave 3 companies (29, export started Jun 16)
