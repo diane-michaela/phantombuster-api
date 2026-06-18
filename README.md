@@ -63,8 +63,6 @@ After a PhantomBuster LinkedIn scrape completes, this script:
 - Classifies each person into a **role rank (1–13)** and a **seniority tag (B = founder/leader)**
 - Outputs `ranked_profiles.csv` with all original columns + `rank` + `seniority_tag`
 
-**Estimated cost: ~$0.17 for 2,000 profiles** (Claude Haiku 4.5 batch pricing).
-
 ---
 
 ## Role rank reference
