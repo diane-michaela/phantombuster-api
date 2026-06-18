@@ -77,8 +77,8 @@ def include_profile(rank_str: str, title: str) -> bool:
 
 # ── Airtable: fetch already-sent profiles ────────────────────────────────────
 PAT   = os.environ.get("AIRTABLE_PAT", "")
-BASE  = "app5BF5NrOgR0kZIB"
-TABLE = "tbl01XKJ9ZQuADIcn"
+BASE  = os.environ.get("AIRTABLE_BASE_ID", "")
+TABLE = os.environ.get("AIRTABLE_TABLE_ID", "")
 
 def get_already_sent() -> set:
     """Return set of LinkedIn URLs where autoconnect_sent = true in Airtable."""

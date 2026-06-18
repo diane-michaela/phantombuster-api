@@ -3,13 +3,13 @@ rank_profiles.py — Classify PhantomBuster LinkedIn profiles by role rank and s
 
 Usage:
     # Fetch output from PhantomBuster then classify:
-    python rank_profiles.py --phantom-id 3489889683570426
+    python rank_profiles.py --phantom-id $PB_WAVE1_ENRICHER_ID
 
     # Classify an existing local CSV:
     python rank_profiles.py --input result.csv
 
     # Append new profiles to an existing ranked_profiles.csv (skip already-ranked):
-    python rank_profiles.py --phantom-id 3489889683570426 --append
+    python rank_profiles.py --phantom-id $PB_WAVE1_ENRICHER_ID --append
     python rank_profiles.py --input new_batch.csv --append
 
     # Resume a batch already submitted (if script was interrupted):

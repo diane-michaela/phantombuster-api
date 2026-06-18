@@ -7,8 +7,8 @@ Reads a ranked CSV produced by rank_profiles.py, adds a 'country' column
 derived from the location field, creates any missing Airtable fields, then
 upserts all records in batches of 10 (Airtable API limit per request).
 
-Target: base app5BF5NrOgR0kZIB / table tbl01XKJ9ZQuADIcn
-Requires AIRTABLE_PAT in .env
+Target: base + table read from AIRTABLE_BASE_ID / AIRTABLE_TABLE_ID in .env
+Requires AIRTABLE_PAT, AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID in .env
 """
 
 import argparse, csv, os, sys, time
@@ -18,11 +18,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PAT   = os.environ.get("AIRTABLE_PAT", "")
-BASE  = "app5BF5NrOgR0kZIB"
-TABLE = "tbl01XKJ9ZQuADIcn"
+BASE  = os.environ.get("AIRTABLE_BASE_ID", "")
+TABLE = os.environ.get("AIRTABLE_TABLE_ID", "")
 
 if not PAT:
     sys.exit("AIRTABLE_PAT not set — add it to your .env file")
+if not BASE or not TABLE:
+    sys.exit("AIRTABLE_BASE_ID and AIRTABLE_TABLE_ID must be set in your .env file")
 
 HEADERS = {"Authorization": f"Bearer {PAT}", "Content-Type": "application/json"}
 

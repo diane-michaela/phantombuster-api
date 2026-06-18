@@ -33,7 +33,7 @@ print(pb.list_phantoms())
 ```bash
 # Fetch PhantomBuster output + classify all profiles in one go:
 source ~/phantombuster-api/.env && \
-  ~/phantombuster-api/.venv/bin/python rank_profiles.py --phantom-id 3489889683570426
+  ~/phantombuster-api/.venv/bin/python rank_profiles.py --phantom-id $PB_WAVE1_ENRICHER_ID
 
 # Or classify a local CSV you already have:
 source ~/phantombuster-api/.env && \
@@ -76,14 +76,14 @@ Both contain the same key — never hard-code it.
 ```
 1. LinkedIn Company Employees Export (PB)
    → auto-runs daily at 04:45, fileMgmt: mix (deduplication)
-   → phantom ID: 824349506789425
+   → phantom ID: $PB_EMPLOYEES_EXPORT_ID (set in .env)
 
 2. filter_and_prepare_enricher.py
    → keeps only France / Spain / Portugal profiles (~45% of total)
    → saves wave2_enricher_input.csv → upload to Google Sheets manually
 
 3. LinkedIn Profile Scraper (PB) — profile enrichment
-   → phantom ID: 5440919304796371
+   → phantom ID: $PB_PROFILE_ENRICHER_ID (set in .env)
    → pointed at filtered Google Sheet, 200 profiles/day
 
 4. rank_profiles.py — Claude Haiku Batch API
@@ -93,7 +93,7 @@ Both contain the same key — never hard-code it.
 5. push_to_airtable.py — push ranked CSV into Airtable
    → auto-creates missing fields, detects country (FR/SP/PT), adds wave label
    → python push_to_airtable.py --input ranked_profiles.csv --wave 2
-   → Airtable base: app5BF5NrOgR0kZIB / table: tbl01XKJ9ZQuADIcn
+   → Airtable base/table: $AIRTABLE_BASE_ID / $AIRTABLE_TABLE_ID (set in .env)
    → requires AIRTABLE_PAT in .env
 
 6. Gem (gem.com) — personal email enrichment

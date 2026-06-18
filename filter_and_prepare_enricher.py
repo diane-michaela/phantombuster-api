@@ -41,8 +41,8 @@ load_env()
 PHANTOM_KEY  = os.environ.get("PHANTOMBUSTER_API_KEY", "")
 PHANTOM_BASE = "https://api.phantombuster.com/api/v2"
 
-EMPLOYEES_EXPORT_ID = "824349506789425"   # Targeted LinkedIn Company Employees Export
-PROFILE_ENRICHER_ID = "5440919304796371"  # targeted LinkedIn Profile Scraper
+EMPLOYEES_EXPORT_ID = os.environ.get("PB_EMPLOYEES_EXPORT_ID", "")
+PROFILE_ENRICHER_ID = os.environ.get("PB_PROFILE_ENRICHER_ID", "")
 
 # Countries to keep — keywords matched against location field (case-insensitive)
 ALLOWED_KEYWORDS = [
