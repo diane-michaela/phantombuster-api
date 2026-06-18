@@ -43,14 +43,14 @@ SKIP_FIELDS = {
     "companyWebsite", "linkedinJobDateRange", "companyIndustry",
     "linkedinSchoolDateRange", "linkedinPreviousSchoolDateRange",
     "linkedinCompanySlug", "createdBy", "updatedBy",
-    # connectionDegree is handled separately below (pushed as singleLineText)
+    "linkedinIsOpenToWorkBadge", "linkedinIsHiringBadge",
 }
 
 ROLE_LABELS = {
-    "1":  "AI / ML / Data Science / LLM / NLP",
+    "1":  "AI / ML / Data Science",
     "2":  "Frontend / Mobile / Fullstack",
     "3":  "Backend",
-    "4":  "DevOps / SRE / Infrastructure / Cloud",
+    "4":  "DevOps / SRE / Infrastructure",
     "5":  "Other Engineering",
     "6":  "Product",
     "7":  "Design",
@@ -173,6 +173,8 @@ def main():
             print(f"  Creating field: {fname} ({ftype})")
             create_field(fname, ftype)
             time.sleep(0.3)
+    # allowlist: only push fields that exist in Airtable (avoids 422 on unknown fields)
+    allowed_fields = existing | set(needed.keys())
 
     print(f"Pushing {len(rows)} records…")
     total_ok = 0
@@ -185,6 +187,8 @@ def main():
             if not value or not value.strip():
                 continue
             at_col = RENAME.get(csv_col, csv_col)
+            if at_col not in allowed_fields:
+                continue
             if at_col in SKIP_FIELDS:
                 continue
             if at_col in NUMBER_FIELDS:

@@ -34,9 +34,18 @@ UPDATE : Please note that PB MCP was released after this project was created. Yo
 
 | Wave | Companies | Profiles | Status |
 |---|---|---|---|
-| Wave 1 (`target_companies_wave1.csv`) | 28 — sales automation FR/ES/PT | 2,187 ranked | Done — in Airtable |
-| Wave 2 (`target_companies_wave2.csv`) | 45 — broader B2B SaaS | 18,700 exported, 9,084 FR/ES/PT | Enricher running (~200/day, done ~Jul 31) |
-| Wave 3 (`target_companies_wave3.csv`) | 29 — Bordeaux tech + AI | — | Export started Jun 16 |
+| Wave 1 (`target_companies_wave1.csv`) | 23/28 exported (5 missing — URL slug mismatch) | 2,187 ranked | ✅ Done — in Airtable |
+| Wave 2 (`target_companies_wave2.csv`) | 45/45 ✅ | 2,199 scraped → 2,187 ranked | ✅ Done — pushed to Airtable Jun 18 |
+| Wave 3 (`target_companies_wave3.csv`) | 21/28 (ETA Jun 19) | — | Export running → filter + enrich after Jun 19 |
+
+**Non-LinkedIn enrichment (Twitter/X · GitHub) — running in parallel:**
+
+| Phantom | Input | Rate | ETA |
+|---|---|---|---|
+| Twitter/X URL Finder (3319486672296602) | 2,188 candidates | 30/day | ~Aug 30 |
+| Twitter/X Profile Scraper (2461522598615921) | URL Finder output | manual | After URL Finder builds list |
+| GitHub User Search Export (1498492852256479) | 2,188 candidates | 20/day | ~Oct 6 |
+| GitHub Profile Scraper (3265537247176143) | Search output | manual | After Search Export |
 
 ---
 
