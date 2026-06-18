@@ -147,14 +147,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Path to ranked CSV")
     parser.add_argument("--wave", default="", help="Wave label (e.g. 2)")
+    parser.add_argument("--offset", type=int, default=0, help="Skip first N rows (default 0)")
+    parser.add_argument("--limit", type=int, default=1000, help="Max rows to push (default 1000)")
     args = parser.parse_args()
 
     if not os.path.exists(args.input):
         sys.exit(f"File not found: {args.input}")
 
     with open(args.input, encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
-    print(f"Read {len(rows)} rows from {args.input}")
+        all_rows = list(csv.DictReader(f))
+    total_in_file = len(all_rows)
+    rows = all_rows[args.offset : args.offset + args.limit]
+    print(f"Read {total_in_file} rows from {args.input} — pushing rows {args.offset + 1}–{args.offset + len(rows)} ({len(rows)} rows)")
 
     print("Checking Airtable fields…")
     existing = get_existing_fields()
@@ -226,7 +230,10 @@ def main():
     if batch:
         total_ok += push_batch(batch)
 
+    next_offset = args.offset + len(rows)
     print(f"\nDone — {total_ok}/{len(rows)} records pushed to Airtable")
+    if next_offset < total_in_file:
+        print(f"Next batch: python push_to_airtable.py --input {args.input} --wave {args.wave} --offset {next_offset}")
 
 
 if __name__ == "__main__":
