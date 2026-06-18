@@ -2,6 +2,8 @@
 
 A Python toolkit that connects PhantomBuster to Claude (Anthropic) to control LinkedIn automation agents in plain English and classify scraped profiles by role and seniority — all from your terminal.
 
+UPDATE : Please note that PB MCP was released after this project was created. You now have the option to connect with the MCP.
+
 ---
 
 ## Sourcing pipeline
