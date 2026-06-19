@@ -26,8 +26,11 @@ UPDATE : Please note that PB MCP was released after this project was created. Yo
    → pushes ranked CSV into Airtable, adds country + role label
    → usage: python push_to_airtable.py 
 
-6. TBC: Gem (gem.com) — shortlisted candidates only
-   → bulk CSV import of LinkedIn URLs → personal emails
+6. TBC:
+      Gem (gem.com) — shortlisted candidates only
+         → bulk CSV import of LinkedIn URLs → personal emails
+      Github/ X user search export — (Github only for Tech shortlisted profiles) 
+         → non-LinkedIn enrichment (Twitter/X · GitHub) — running in parallel
 ```
 
 **Wave status (Jun 2026):**
@@ -44,10 +47,10 @@ Filtered to ranks 1–7 only (technical profiles: AI/ML, Eng, Product, Design) �
 
 | Phantom | Input | Rate | ETA |
 |---|---|---|---|
-| Twitter/X URL Finder (3319486672296602) | 1,146 candidates | 30/day | ~Sep 7 |
-| Twitter/X Profile Scraper (2461522598615921) | URL Finder output | manual | After URL Finder builds list |
-| GitHub User Search Export (1498492852256479) | 1,146 candidates | 20/day | ~mid-Aug |
-| GitHub Profile Scraper (3265537247176143) | Search output | manual | After Search Export |
+| Twitter/X URL Finder  
+| Twitter/X Profile Scraper URL Finder output | manual | After URL Finder builds list |
+| GitHub User Search Export 
+| GitHub Profile Scraper Search output | manual | After Search Export |
 
 ---
 
