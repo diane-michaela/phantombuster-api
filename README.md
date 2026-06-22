@@ -26,11 +26,12 @@ UPDATE : Please note that PB MCP was released after this project was created. Yo
    → pushes ranked CSV into Airtable, adds country + role label
    → usage: python push_to_airtable.py 
 
-6. TBC:
+6. Github/ X user search export — (Github only for Tech shortlisted profiles)
+    → non-LinkedIn enrichment (Twitter/X · GitHub) — running in parallel
+
+TBC:
       Gem (gem.com) — shortlisted candidates only
          → bulk CSV import of LinkedIn URLs → personal emails
-      Github/ X user search export — (Github only for Tech shortlisted profiles) 
-         → non-LinkedIn enrichment (Twitter/X · GitHub) — running in parallel
 ```
 
 **Wave status (Jun 2026):**
@@ -258,3 +259,5 @@ Most PhantomBuster endpoints are on **v1**: `https://api.phantombuster.com/api/v
 The launch endpoint is the exception: `POST https://api.phantombuster.com/api/v2/agents/launch`
 
 Auth header on all calls: `X-Phantombuster-Key: <key>`
+
+
