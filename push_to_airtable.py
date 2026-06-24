@@ -83,6 +83,16 @@ CITY_COUNTRY = {
     "santiago de compostela": "SP", "donostia": "SP",
     # Portugal
     "lisbon": "PT", "porto": "PT", "braga": "PT", "coimbra": "PT",
+    # Ireland
+    "dublin": "IE", "cork": "IE", "galway": "IE", "limerick": "IE",
+    # Poland
+    "warsaw": "PL", "warszawa": "PL", "kraków": "PL", "krakow": "PL",
+    "wrocław": "PL", "wroclaw": "PL", "gdańsk": "PL", "gdansk": "PL",
+    "poznań": "PL", "poznan": "PL",
+    # Italy
+    "rome": "IT", "roma": "IT", "milan": "IT", "milano": "IT",
+    "turin": "IT", "torino": "IT", "naples": "IT", "napoli": "IT",
+    "florence": "IT", "firenze": "IT", "bologna": "IT",
     "faro": "PT", "funchal": "PT", "aveiro": "PT", "setúbal": "PT",
     "setubal": "PT", "viseu": "PT", "leiria": "PT", "évora": "PT",
 }
@@ -94,14 +104,21 @@ def detect_country(location: str) -> str:
     # Country name anywhere in string (handles "Greater Córdoba, Spain Area" etc.)
     if "france" in lower:
         return "FR"
-    if "spain" in lower:
+    if "spain" in lower or "españa" in lower:
         return "SP"
     if "portugal" in lower:
         return "PT"
+    if "ireland" in lower:
+        return "IE"
+    if "poland" in lower or "polska" in lower:
+        return "PL"
+    if "italy" in lower or "italia" in lower:
+        return "IT"
     # Last segment after final comma ("Barcelona, Catalonia, Spain")
     last = lower.rsplit(",", 1)[-1].strip()
-    if last in ("france", "spain", "portugal"):
-        return {"france": "FR", "spain": "SP", "portugal": "PT"}[last]
+    if last in ("france", "spain", "portugal", "ireland", "poland", "italy"):
+        return {"france": "FR", "spain": "SP", "portugal": "PT",
+                "ireland": "IE", "poland": "PL", "italy": "IT"}[last]
     # City/region name lookup for "Greater X Metropolitan Area/Region" patterns
     for city, code in CITY_COUNTRY.items():
         if city in lower:

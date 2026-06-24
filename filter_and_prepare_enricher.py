@@ -45,7 +45,7 @@ EMPLOYEES_EXPORT_ID = os.environ.get("PB_EMPLOYEES_EXPORT_ID", "")
 PROFILE_ENRICHER_ID = os.environ.get("PB_PROFILE_ENRICHER_ID", "")
 
 # Countries to keep — keywords matched against location field (case-insensitive)
-ALLOWED_KEYWORDS = [
+BASE_ALLOWED_KEYWORDS = [
     "france", "paris", "lyon", "bordeaux", "marseille", "toulouse",
     "nantes", "lille", "strasbourg", "montpellier", "rennes", "grenoble",
     "spain", "españa", "madrid", "barcelona", "valencia", "seville",
@@ -53,6 +53,15 @@ ALLOWED_KEYWORDS = [
     "portugal", "lisbon", "porto", "lisboa", "braga", "coimbra",
     ", fr", ", es", ", pt",
 ]
+
+# Extra keywords per country code — used by --extra-countries flag
+COUNTRY_KEYWORDS = {
+    "ireland": ["ireland", "dublin", "cork", "galway", ", ie"],
+    "poland":  ["poland", "polska", "warsaw", "warszawa", "kraków", "krakow",
+                "wrocław", "wroclaw", "gdańsk", "gdansk", "poznań", "poznan", ", pl"],
+    "italy":   ["italy", "italia", "rome", "roma", "milan", "milano", "turin",
+                "torino", "naples", "napoli", "florence", "firenze", ", it"],
+}
 
 # ---------------------------------------------------------------------------
 # PhantomBuster helpers
@@ -135,7 +144,7 @@ def upload_to_google_sheet(profile_urls: list[str], title: str) -> str:
     Requires GOOGLE_ACCESS_TOKEN in env, or falls back to saving a local CSV
     and printing instructions.
     """
-    local_path = Path(__file__).parent / "wave2_enricher_input.csv"
+    local_path = Path(__file__).parent / f"{title.lower().replace(' ', '_')}_enricher_input.csv"
     with open(local_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["profileUrl"])
@@ -209,7 +218,24 @@ def main():
                         help="Skip confirmation and activate enricher immediately")
     parser.add_argument("--spreadsheet-url",
                         help="Skip upload: point enricher at this existing Google Sheet URL")
+    parser.add_argument("--wave", default="wave",
+                        help="Wave label used for output filename (e.g. 'wave4')")
+    parser.add_argument("--extra-countries", default="",
+                        help="Comma-separated extra countries to include, e.g. 'ireland,poland,italy'")
     args = parser.parse_args()
+
+    # Build allowed keywords for this run
+    global ALLOWED_KEYWORDS
+    ALLOWED_KEYWORDS = list(BASE_ALLOWED_KEYWORDS)
+    if args.extra_countries:
+        for country in args.extra_countries.lower().split(","):
+            country = country.strip()
+            extra = COUNTRY_KEYWORDS.get(country)
+            if extra:
+                ALLOWED_KEYWORDS.extend(extra)
+                print(f"  + Including {country.capitalize()} profiles")
+            else:
+                print(f"  WARNING: no keywords defined for '{country}' — add to COUNTRY_KEYWORDS")
 
     # Step 1 — fetch export
     rows = fetch_export_csv()
@@ -218,11 +244,12 @@ def main():
     kept    = [r for r in rows if is_allowed(r)]
     dropped = [r for r in rows if not is_allowed(r)]
 
+    country_label = "FR/ES/PT" + (f" + {args.extra_countries.upper()}" if args.extra_countries else "")
     print(f"\n{'='*55}")
-    print(f"FILTER RESULTS — keeping FR/ES/PT only")
+    print(f"FILTER RESULTS — keeping {country_label}")
     print(f"{'='*55}")
     print(f"  Total profiles from export : {len(rows):,}")
-    print(f"  Kept (FR/ES/PT)            : {len(kept):,}")
+    print(f"  Kept ({country_label})  : {len(kept):,}")
     print(f"  Dropped (other countries)  : {len(dropped):,}")
 
     # Country breakdown of kept
@@ -262,9 +289,9 @@ def main():
         sheet_url = args.spreadsheet_url
         print(f"Using provided sheet: {sheet_url}")
     else:
-        upload_to_google_sheet(unique, "wave2_enricher_input_June2026")
-        print("\nUpload wave2_enricher_input.csv to Google Sheets, then re-run with:")
-        print("  python filter_and_prepare_enricher.py --spreadsheet-url <YOUR_SHEET_URL>")
+        upload_to_google_sheet(unique, f"{args.wave}_enricher_input_June2026")
+        print(f"\nUpload {args.wave}_enricher_input_june2026.csv to Google Sheets, then re-run with:")
+        print(f"  python filter_and_prepare_enricher.py --wave {args.wave} --extra-countries \"{args.extra_countries}\" --spreadsheet-url <YOUR_SHEET_URL>")
         return
 
     # Step 5 — update enricher phantom
