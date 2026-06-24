@@ -41,6 +41,7 @@ TBC:
 | Wave 1 (`target_companies_wave1.csv`) | 23/28 exported (5 missing — URL slug mismatch) | 2,187 ranked | ✅ Done — in Airtable |
 | Wave 2 (`target_companies_wave2.csv`) | 45/45 ✅ | 2,199 scraped → 2,187 ranked | ✅ Ranked + in Airtable Jun 18. Profile Scraper enriching 9,084 profiles (200/day, ETA ~Aug 1) |
 | Wave 3 (`target_companies_wave3.csv`) | 28/28 ✅ (done Jun 19) | — | Filter + enrich queued — starts after wave 2 enricher (~Aug 1) |
+| Wave 4 (`target_companies_wave4.csv`) | 6 GTM-focused (Gong, Modjo, Ringover, Livestorm, Pennylane, Agicap) | — | Employees Export launched Jun 24 |
 
 **Non-LinkedIn enrichment (Twitter/X · GitHub) — running in parallel:**
 
@@ -230,6 +231,7 @@ phantombuster-api/
 ├── target_companies_wave1.csv        # Wave 1 companies (28, done)
 ├── target_companies_wave2.csv        # Wave 2 companies (45, enricher running)
 ├── target_companies_wave3.csv        # Wave 3 companies (29, export started Jun 16)
+├── target_companies_wave4.csv        # Wave 4 companies (6 GTM-focused, export launched Jun 24)
 ├── requirements.txt                  # httpx, anthropic
 ├── CLAUDE.md                         # Instructions for Claude Code
 ├── .env                              # API keys — NOT committed
