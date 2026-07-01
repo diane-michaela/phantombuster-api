@@ -4,7 +4,11 @@ pb_daily_dashboard.py — Posts a PhantomBuster pipeline status dashboard to Sla
 Usage:
     python3 pb_daily_dashboard.py
 
-Requires PHANTOMBUSTER_API_KEY and SLACK_WEBHOOK_URL in .env.
+Requires in .env: PHANTOMBUSTER_API_KEY, SLACK_WEBHOOK_URL,
+PB_EMPLOYEES_EXPORT_ID, PB_PROFILE_ENRICHER_ID,
+PB_PHANTOM_TWITTER_URL_FINDER, PB_PHANTOM_TWITTER_SCRAPER,
+PB_PHANTOM_GITHUB_USER_SEARCH, PB_PHANTOM_GITHUB_PROFILE_SCRAPER,
+PB_EMPLOYEES_S3_URL, PB_TWITTER_S3_URL, PB_GITHUB_S3_URL.
 """
 
 import csv
@@ -27,37 +31,41 @@ PB_V2 = "https://api.phantombuster.com/api/v2"
 
 ENRICHMENT_TOTAL = 1146   # Twitter/GitHub — technical profiles ranks 1–7
 
+TWITTER_URL_FINDER_ID    = os.environ.get("PB_PHANTOM_TWITTER_URL_FINDER", "")
+GITHUB_USER_SEARCH_ID    = os.environ.get("PB_PHANTOM_GITHUB_USER_SEARCH", "")
+TWITTER_SCRAPER_ID       = os.environ.get("PB_PHANTOM_TWITTER_SCRAPER", "")
+GITHUB_PROFILE_SCRAPER_ID = os.environ.get("PB_PHANTOM_GITHUB_PROFILE_SCRAPER", "")
+
 DAILY_RATES = {
-    "3319486672296602": 30,   # Twitter/X URL Finder
-    "1498492852256479": 20,   # GitHub User Search
+    TWITTER_URL_FINDER_ID: 30,
+    GITHUB_USER_SEARCH_ID: 20,
 }
 
-PROFILE_SCRAPER_ID   = "5440919304796371"
+PROFILE_SCRAPER_ID   = os.environ.get("PB_PROFILE_ENRICHER_ID", "")
 WAVE2_ENRICHER_TOTAL = 9084
 PROFILE_SCRAPER_RATE = 200
 
-EMPLOYEES_EXPORT_ID = "824349506789425"
-EMPLOYEES_S3_URL    = "https://phantombuster.s3.amazonaws.com/VLyWCsB92xw/4kVh4fayldhhYiUHf2MsHg/result.csv"
+EMPLOYEES_EXPORT_ID = os.environ.get("PB_EMPLOYEES_EXPORT_ID", "")
+EMPLOYEES_S3_URL    = os.environ.get("PB_EMPLOYEES_S3_URL", "")
 
-# Hardcoded result URLs (PhantomBuster uses custom filenames, not result.csv)
 ENRICHMENT_S3_URLS = {
-    "3319486672296602": "https://phantombuster.s3.amazonaws.com/VLyWCsB92xw/HvQuPPZMKdKCrKiiq8IaXw/enrichment-twitter-urls.csv",
-    "1498492852256479": "https://phantombuster.s3.amazonaws.com/VLyWCsB92xw/wVbi9D6ZX0w3dfqlDVIk7Q/enrichment-github-search.csv",
+    TWITTER_URL_FINDER_ID: os.environ.get("PB_TWITTER_S3_URL", ""),
+    GITHUB_USER_SEARCH_ID: os.environ.get("PB_GITHUB_S3_URL", ""),
 }
 
+_REPO = Path(__file__).parent
 WAVE_CSVS = {
-    "wave1": Path("/Users/dianerocher/phantombuster-api/target_companies_wave1.csv"),
-    "wave2": Path("/Users/dianerocher/phantombuster-api/target_companies_wave2.csv"),
-    "wave3": Path("/Users/dianerocher/phantombuster-api/target_companies_wave3.csv"),
-    "wave4": Path("/Users/dianerocher/phantombuster-api/target_companies_wave4.csv"),
+    "wave1": _REPO / "target_companies_wave1.csv",
+    "wave2": _REPO / "target_companies_wave2.csv",
+    "wave3": _REPO / "target_companies_wave3.csv",
+    "wave4": _REPO / "target_companies_wave4.csv",
 }
 
-# Auto-scheduled phantoms watched for gap detection (id -> label)
 AUTO_PHANTOMS = {
-    EMPLOYEES_EXPORT_ID: "Employees Export",
-    PROFILE_SCRAPER_ID:  "Profile Scraper",
-    "3319486672296602":  "Twitter/X URL Finder",
-    "1498492852256479":  "GitHub User Search",
+    EMPLOYEES_EXPORT_ID:   "Employees Export",
+    PROFILE_SCRAPER_ID:    "Profile Scraper",
+    TWITTER_URL_FINDER_ID: "Twitter/X URL Finder",
+    GITHUB_USER_SEARCH_ID: "GitHub User Search",
 }
 
 
@@ -227,10 +235,10 @@ def format_scraper_section(prog, last_run_cache):
 
 def format_enrichment_section(agents, prog, last_run_cache):
     enrichment_ids = [
-        ("3319486672296602", "Twitter/X URL Finder",   "daily 8:00 AM Paris"),
-        ("2461522598615921", "Twitter/X Scraper",      "manual — needs URL Finder output"),
-        ("1498492852256479", "GitHub User Search",     "daily 8:30 AM Paris"),
-        ("3265537247176143", "GitHub Profile Scraper", "manual — needs Search output"),
+        (TWITTER_URL_FINDER_ID,    "Twitter/X URL Finder",   "daily 8:00 AM Paris"),
+        (TWITTER_SCRAPER_ID,       "Twitter/X Scraper",      "manual — needs URL Finder output"),
+        (GITHUB_USER_SEARCH_ID,    "GitHub User Search",     "daily 8:30 AM Paris"),
+        (GITHUB_PROFILE_SCRAPER_ID,"GitHub Profile Scraper", "manual — needs Search output"),
     ]
     lines = []
 
@@ -263,8 +271,8 @@ def format_up_next(prog):
     now   = datetime.now(timezone.utc)
     steps = []
 
-    tw = prog.get("3319486672296602", {})
-    gh = prog.get("1498492852256479", {})
+    tw = prog.get(TWITTER_URL_FINDER_ID, {})
+    gh = prog.get(GITHUB_USER_SEARCH_ID, {})
     ps = prog[PROFILE_SCRAPER_ID]
 
     if tw.get("eta_dt"):
@@ -309,8 +317,8 @@ def format_vigilance(meta_cache, last_run_cache, prog):
             lines.append(f"  ⚠️ *{name}* last run ended with status `{status}`")
 
     # GitHub 429 rate-limit check — warn if progress is very slow
-    gh_prog = prog.get("1498492852256479", {})
-    gh_lc   = last_run_cache.get("1498492852256479", {})
+    gh_prog = prog.get(GITHUB_USER_SEARCH_ID, {})
+    gh_lc   = last_run_cache.get(GITHUB_USER_SEARCH_ID, {})
     if gh_lc.get("queueDate") and gh_prog.get("done", 0) < 20:
         lines.append("  🟡 *GitHub User Search* hitting 429 rate limits — progress very slow, consider reducing daily run frequency")
 
@@ -333,7 +341,7 @@ def format_dashboard(agents):
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     lines = [f"*🤖 PhantomBuster Pipeline Status* — `{today}`\n"]
 
-    all_ids    = list(AUTO_PHANTOMS.keys()) + ["2461522598615921", "3265537247176143"]
+    all_ids    = list(AUTO_PHANTOMS.keys()) + [TWITTER_SCRAPER_ID, GITHUB_PROFILE_SCRAPER_ID]
     meta_cache = {aid: fetch_agent_v2(aid) for aid in all_ids}
     last_run_cache = {aid: get_last_container(aid) for aid in AUTO_PHANTOMS}
     prog       = compute_progress(meta_cache)
