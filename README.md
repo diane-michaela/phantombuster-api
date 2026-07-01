@@ -72,7 +72,35 @@ Eight ready-to-use functions to control any PhantomBuster agent without touching
 | `get_phantom_status(agent_id)` | Return current launch status + last end message |
 | `delete_phantom_output(agent_id)` | Delete all stored output for an agent |
 
-### 2. LinkedIn Profile Ranker (`rank_profiles.py`)
+### 2. Slack Daily Dashboard (`pb_daily_dashboard.py`)
+Posts a pipeline status report every weekday morning to a Slack channel via incoming webhook.
+
+**What it shows:**
+- Which phantoms are currently running
+- Company Employees Export progress per wave
+- LinkedIn Profile Scraper (enricher) progress + ETA
+- Twitter/X and GitHub enrichment phantom progress + ETA
+- Up Next action items with dates
+- Vigilance alerts (stale LinkedIn cookie, missed runs, errors)
+
+**Setup:**
+1. Create a Slack incoming webhook for your channel ([api.slack.com/apps](https://api.slack.com/apps) → Incoming Webhooks → Add to Workspace)
+2. Add `SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...` to your `.env`
+3. Add a crontab entry to run it automatically:
+
+```bash
+# 9:03 AM Paris (7:03 AM UTC), Mon–Fri
+3 7 * * 1-5 cd /path/to/phantombuster-api && python3 pb_daily_dashboard.py >> /tmp/pb_dashboard.log 2>&1
+```
+
+Or run manually at any time:
+```bash
+source .env && python3 pb_daily_dashboard.py
+```
+
+---
+
+### 3. LinkedIn Profile Ranker (`rank_profiles.py`)
 After a PhantomBuster LinkedIn scrape completes, this script:
 - Fetches the result CSV automatically from PhantomBuster
 - Sends every profile to **Claude Haiku via the Batch API** (async, 50% cheaper than standard)
@@ -134,6 +162,7 @@ Create a `.env` file in the project root (never committed — already in `.gitig
 ```
 PHANTOMBUSTER_API_KEY=your_phantombuster_key_here
 ANTHROPIC_API_KEY=your_anthropic_key_here
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...   # optional, for pb_daily_dashboard.py
 ```
 
 ---
@@ -224,6 +253,7 @@ Output sorted: seniority B first, then rank ascending. LinkedIn limit: ~20 conne
 ```
 phantombuster-api/
 ├── phantombuster_api.py              # PhantomBuster API wrapper (8 functions)
+├── pb_daily_dashboard.py             # Slack daily pipeline status dashboard (Mon–Fri 9 AM Paris)
 ├── rank_profiles.py                  # LinkedIn profile classifier (Claude Batch API)
 ├── filter_and_prepare_enricher.py    # Filter FR/ES/PT → prep enricher input
 ├── push_to_airtable.py               # Push ranked CSV → Airtable (country, connectionDegree, autoconnect_sent)
