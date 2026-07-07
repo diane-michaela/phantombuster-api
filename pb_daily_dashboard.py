@@ -47,10 +47,10 @@ ENRICHMENT_S3_URLS = {
 }
 
 WAVE_CSVS = {
-    "wave1": Path("/Users/dianerocher/phantombuster-api/target_companies_wave1.csv"),
-    "wave2": Path("/Users/dianerocher/phantombuster-api/target_companies_wave2.csv"),
-    "wave3": Path("/Users/dianerocher/phantombuster-api/target_companies_wave3.csv"),
-    "wave4": Path("/Users/dianerocher/phantombuster-api/target_companies_wave4.csv"),
+    "wave1": Path(__file__).parent / "wave" / "target_companies_wave1.csv",
+    "wave2": Path(__file__).parent / "wave" / "target_companies_wave2.csv",
+    "wave3": Path(__file__).parent / "wave" / "target_companies_wave3.csv",
+    "wave4": Path(__file__).parent / "wave" / "target_companies_wave4.csv",
 }
 
 # Auto-scheduled phantoms watched for gap detection (id -> label)
