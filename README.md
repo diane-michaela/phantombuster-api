@@ -1,4 +1,4 @@
-# PhantomBuster API + LinkedIn Profile Ranker
+# PhantomBuster API (new: MCP) + LinkedIn Profile Ranker
 
 A Python toolkit that connects PhantomBuster to Claude (Anthropic) to control LinkedIn automation agents in plain English and classify scraped profiles by role and seniority — all from your terminal.
 
